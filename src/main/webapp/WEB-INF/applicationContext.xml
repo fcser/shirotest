@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+						http://www.springframework.org/schema/context 
+						http://www.springframework.org/schema/context/spring-context-4.0.xsd
+						http://www.springframework.org/schema/aop 
+						http://www.springframework.org/schema/aop/spring-aop-4.0.xsd 
+						http://www.springframework.org/schema/tx 
+						http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+						http://www.springframework.org/schema/util
+						http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+	<context:property-placeholder location="classpath:dp.properties" ignore-unresolvable="true"/>
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${jdbc.driver}"/>
+		<property name="url" value="${jdbc.url}"/>
+		<property name="username" value="${jdbc.username}"/>
+		<property name="password" value="${jdbc.password}"/>
+	</bean>
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<bean id="shiroDAO" class="com.dayang.dao.ShiroDAO">
+		<property name="jdbcTemplate" ref="jdbcTemplate"/>
+	</bean>
+	<bean id="shiroService" class="com.dayang.service.ShiroService">
+		<property name="shiroDAO" ref="shiroDAO"/>
+	</bean>
+	<bean id="myShiroRealm" class="com.dayang.util.MyShiroRealm">
+		<property name="shiroService" ref="shiroService"/>
+	</bean>
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<property name="realm" ref="myShiroRealm"/>
+	</bean>
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager"/>
+		
+		<property name="loginUrl" value="/gologin.html"/>
+		
+		<property name="successUrl" value="/index.html"/>
+		
+		<property name="unauthorizedUrl" value="/error.jsp"/>
+		
+		<property name="filterChainDefinitions">
+			<value>
+				/gologin.html = anon
+				/login.html = anon
+				/doadd.html = authc, perms[perm1,perm2]
+				/doget.html = authc, perms[admin]
+				/doupdate.html = authc, perms[perm1]
+				/dodel.html = authc, perms[perm2]
+			</value>
+		</property>
+	</bean>
+</beans>
